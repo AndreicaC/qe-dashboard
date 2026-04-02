@@ -1,0 +1,34 @@
+{
+  "date": "2026-04-02",
+  "generated_at": "2026-04-02T07:02:00Z",
+  "meetings": [
+    { "title": "Daily Standup", "time": "10:00", "duration": "30min", "link": "https://teams.microsoft.com/", "platform": "Teams" },
+    { "title": "Sprint 42 Review", "time": "14:00", "duration": "1h", "link": "https://teams.microsoft.com/", "platform": "Teams" },
+    { "title": "1:1 with Manager", "time": "16:00", "duration": "30min", "link": "https://teams.microsoft.com/", "platform": "Teams" }
+  ],
+  "emails": [
+    { "id": "AAMk001", "subject": "[JIRA] BUG-4421 - Login flow fails on iOS 17.4", "from": "jira-noreply@fanduel.com", "time": "08:14", "category": "BUG_REPORTS", "status": "ACTION_REQUIRED", "summary": "Critical bug assigned to you. Blocks QA sign-off for sprint release.", "outlook_link": "https://outlook.office.com/mail/inbox" },
+    { "id": "AAMk002", "subject": "[GitHub] PR #892 — Review requested: fix/payment-validation", "from": "notifications@github.com", "time": "07:55", "category": "CODE_REVIEWS", "status": "ACTION_REQUIRED", "summary": "Dan M. needs your review. PR blocks 3pm deploy.", "outlook_link": "https://outlook.office.com/mail/inbox" },
+    { "id": "AAMk003", "subject": "Sprint 42 — QA sign-off needed by EOD", "from": "alex.popescu@fanduel.com", "time": "06:30", "category": "TEAM_STAKEHOLDERS", "status": "ACTION_REQUIRED", "summary": "Manager asking for QA sign-off on 5 stories before 5pm release cut.", "outlook_link": "https://outlook.office.com/mail/inbox" },
+    { "id": "AAMk004", "subject": "[Jenkins] Build #2341 UNSTABLE — 3 flaky tests", "from": "ci@fanduel.com", "time": "05:12", "category": "CICD_ALERTS", "status": "IN_REVIEW", "summary": "3 flaky tests in regression suite. Build passed overall. Monitoring.", "outlook_link": "https://outlook.office.com/mail/inbox" },
+    { "id": "AAMk005", "subject": "[GitHub] Reply on PR #881 comment", "from": "notifications@github.com", "time": "04:47", "category": "CODE_REVIEWS", "status": "IN_REVIEW", "summary": "Dev replied to your comment. Awaiting your decision on test coverage.", "outlook_link": "https://outlook.office.com/mail/inbox" },
+    { "id": "AAMk006", "subject": "[Jenkins] Build #2340 SUCCESS ✅", "from": "ci@fanduel.com", "time": "03:00", "category": "CICD_ALERTS", "status": "FYI", "summary": "Nightly regression 847/847 passed. No action needed.", "outlook_link": "https://outlook.office.com/mail/inbox" },
+    { "id": "AAMk007", "subject": "Sprint 42 retrospective notes", "from": "scrum@fanduel.com", "time": "09:01", "category": "TEAM_STAKEHOLDERS", "status": "FYI", "summary": "Retro notes shared for reference. No action items for you.", "outlook_link": "https://outlook.office.com/mail/inbox" },
+    { "id": "AAMk008", "subject": "[GitHub] PR #878 merged into main", "from": "notifications@github.com", "time": "08:45", "category": "CODE_REVIEWS", "status": "FYI", "summary": "PR you reviewed merged successfully.", "outlook_link": "https://outlook.office.com/mail/inbox" },
+    { "id": "AAMk009", "subject": "Weekly Engineering Newsletter — Week 14", "from": "engineering@fanduel.com", "time": "08:00", "category": "TEAM_STAKEHOLDERS", "status": "FYI", "summary": "Company-wide engineering update. Hackathon announcement.", "outlook_link": "https://outlook.office.com/mail/inbox" },
+    { "id": "AAMk010", "subject": "[JIRA] BUG-4398 — Backend timeout /api/bets", "from": "jira-noreply@fanduel.com", "time": "07:22", "category": "BUG_REPORTS", "status": "DELEGATE", "summary": "Backend timeout — root cause is server-side. Forward to backend lead.", "outlook_link": "https://outlook.office.com/mail/inbox" },
+    { "id": "AAMk011", "subject": "Vendor contract renewal — DocuSign request", "from": "procurement@fanduel.com", "time": "06:10", "category": "TEAM_STAKEHOLDERS", "status": "DELEGATE", "summary": "DocuSign for vendor tool renewal. Not for QE — send to manager/finance.", "outlook_link": "https://outlook.office.com/mail/inbox" }
+  ],
+  "builds": [
+    { "name": "Build #2341", "status": "unstable", "time": "05:12", "details": "3 flaky tests" },
+    { "name": "Build #2340", "status": "passed", "time": "03:00", "details": "847/847 passed" },
+    { "name": "Deploy staging", "status": "pending", "time": "09:00", "details": "Awaiting approval" }
+  ],
+  "tasks": [
+    { "id": "t1", "text": "Review PR #892 — fix/payment-validation", "done": false, "priority": "high" },
+    { "id": "t2", "text": "QA sign-off Sprint 42 (5 stories)", "done": false, "priority": "high" },
+    { "id": "t3", "text": "Investigate BUG-4421 iOS login flow", "done": false, "priority": "high" },
+    { "id": "t4", "text": "Attend Daily Standup 10:00", "done": false, "priority": "medium" },
+    { "id": "t5", "text": "Forward BUG-4398 to backend lead", "done": false, "priority": "low" }
+  ]
+}
