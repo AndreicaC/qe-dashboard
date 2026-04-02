@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QE Dashboard — Cristina</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f0f2f5; --white: #fff; --dark: #0f172a; --dark2: #1e293b;
+      --gray: #64748b; --border: #e2e8f0; --font: 'Inter', system-ui, sans-serif;
+      --red: #ef4444; --red-bg: #fef2f2; --red-border: #fecaca;
+      --yellow: #f59e0b; --yellow-bg: #fffbeb; --yellow-border: #fde68a;
+      --green: #10b981; --green-bg: #ecfdf5; --green-border: #a7f3d0;
+      --slate: #94a3b8; --slate-bg: #f8fafc; --slate-border: #e2e8f0;
+      --bug: #7c3aed; --bug-bg: #f5f3ff;
+      --pr: #2563eb; --pr-bg: #eff6ff;
+      --ci: #d97706; --ci-bg: #fff7ed;
+      --team: #059669; --team-bg: #ecfdf5;
+      --radius: 12px; --radius-sm: 8px;
+    }
+    body { font-family: var(--font); background: var(--bg); color: var(--dark); min-height: 100vh; }
+    a { text-decoration: none; color: inherit; }
+
+    /* ── LOADING BAR ── */
+    #loading-bar {
+      position: fixed; top: 0; left: 0; width: 0; height: 3px;
+      background: linear-gradient(90deg, #6366f1, #8b5cf6);
+      z-index: 1000; transition: width 0.3s ease; border-radius: 0 2px 2px 0;
+    }
+    #loading-bar.active { animation: loading 1.2s ease-in-out infinite; }
+    @keyframes loading { 0%{width:0%} 50%{width:70%} 100%{width:90%} }
+    #loading-bar.done { width: 100% !important; opacity: 0; transition: opacity 0.3s 0.2s; }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--dark); color: white;
+      padding: 18px 28px; display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap; gap: 12px;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .header-left h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.3px; }
+    .header-left p { font-size: 0.78rem; color: rgba(255,255,255,0.45); margin-top: 2px; }
+    .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .last-updated { font-size: 0.78rem; color: rgba(255,255,255,0.4); }
+    .last-updated span { color: rgba(255,255,255,0.7); font-weight: 500; }
+    .btn-import {
+      background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8);
+      border: 1px solid rgba(255,255,255,0.15);
+      padding: 7px 14px; border-radius: var(--radius-sm);
+      font-size: 0.8rem; font-weight: 500; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-import:hover { background: rgba(255,255,255,0.14); }
+    .btn-refresh {
+      background: #6366f1; color: white; border: none;
+      padding: 8px 18px; border-radius: var(--radius-sm);
+      font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; gap: 7px;
+      transition: background 0.15s;
+    }
+    .btn-refresh:hover { background: #4f46e5; }
+    .btn-refresh .spin { display: none; }
+    .btn-refresh.loading .spin { display: inline; animation: spin 0.8s linear infinite; }
+    .btn-refresh.loading .icon { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #file-input { display: none; }
+
+    /* ── DATE TABS ── */
+    .date-tabs {
+      background: var(--white); border-bottom: 1px solid var(--border);
+      padding: 0 28px; display: flex; gap: 4px; overflow-x: auto;
+    }
+    .date-tab {
+      padding: 12px 16px; font-size: 0.82rem; font-weight: 500;
+      color: var(--gray); cursor: pointer; border-bottom: 2px solid transparent;
+      white-space: nowrap; transition: all 0.15s;
+    }
+    .date-tab:hover { color: var(--dark); }
+    .date-tab.active { color: #6366f1; border-bottom-color: #6366f1; font-weight: 600; }
+    .date-tab .badge {
+      background: var(--bg); color: var(--gray);
+      font-size: 0.7rem; padding: 1px 6px; border-radius: 10px; margin-left: 5px;
+    }
+    .date-tab.active .badge { background: #ede9fe; color: #6366f1; }
+
+    /* ── MAIN ── */
+    main { padding: 24px 28px; max-width: 1400px; margin: 0 auto; }
+
+    /* ── SUMMARY STRIP ── */
+    .summary-strip {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+      margin-bottom: 20px;
+    }
+    .summary-card {
+      background: var(--white); border-radius: var(--radius);
+      padding: 16px 18px; border: 1.5px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .summary-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .summary-card strong { font-size: 1.8rem; font-weight: 800; line-height: 1; }
+    .summary-card span { font-size: 0.78rem; color: var(--gray); }
+
+    /* ── GRID ROW 1 ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+    /* ── PANEL ── */
+    .panel {
+      background: var(--white); border-radius: var(--radius);
+      border: 1.5px solid var(--border); overflow: hidden;
+    }
+    .panel-header {
+      padding: 14px 18px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .panel-title { font-size: 0.82rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--gray); }
+    .panel-count { font-size: 0.75rem; color: var(--gray); background: var(--bg); padding: 2px 8px; border-radius: 10px; }
+    .panel-body { padding: 14px 18px; }
+
+    /* ── MEETINGS ── */
+    .meeting-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+    }
+    .meeting-item:last-child { border-bottom: none; }
+    .meeting-time { font-size: 0.78rem; font-weight: 700; color: #6366f1; min-width: 44px; }
+    .meeting-info { flex: 1; }
+    .meeting-title { font-size: 0.88rem; font-weight: 600; }
+    .meeting-dur { font-size: 0.75rem; color: var(--gray); }
+    .meeting-link {
+      font-size: 0.75rem; background: #ede9fe; color: #6366f1;
+      padding: 4px 10px; border-radius: 6px; font-weight: 500;
+    }
+    .meeting-link:hover { background: #ddd6fe; }
+    .no-items { font-size: 0.85rem; color: var(--gray); padding: 8px 0; }
+
+    /* ── EMAIL FILTERS ── */
+    .email-filters {
+      padding: 12px 18px; border-bottom: 1px solid var(--border);
+      display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+    }
+    .filter-chip {
+      border: 1.5px solid var(--border); background: var(--white);
+      border-radius: 20px; padding: 4px 12px;
+      font-size: 0.78rem; font-weight: 500; cursor: pointer;
+      color: var(--gray); transition: all 0.15s;
+    }
+    .filter-chip:hover { border-color: #6366f1; color: #6366f1; }
+    .filter-chip.active { border-color: #6366f1; background: #ede9fe; color: #6366f1; font-weight: 600; }
+    .filter-sep { width: 1px; height: 18px; background: var(--border); }
+
+    /* ── EMAIL LIST ── */
+    .email-list { padding: 12px 18px; display: flex; flex-direction: column; gap: 8px; max-height: 460px; overflow-y: auto; }
+    .email-card {
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      padding: 12px 14px; display: grid;
+      grid-template-columns: 10px 1fr auto;
+      gap: 0 10px; align-items: start;
+      transition: box-shadow 0.15s, border-color 0.15s;
+    }
+    .email-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.06); border-color: #c7d2fe; }
+    .email-card.hidden { display: none; }
+    .email-status-bar { width: 3px; height: 100%; border-radius: 2px; margin-top: 2px; grid-row: span 3; align-self: stretch; }
+    .email-subject { font-size: 0.88rem; font-weight: 600; color: var(--dark); }
+    .email-subject a { color: inherit; }
+    .email-subject a:hover { color: #6366f1; text-decoration: underline; }
+    .email-from { font-size: 0.75rem; color: var(--gray); margin-top: 3px; }
+    .email-summary { font-size: 0.82rem; color: #475569; margin-top: 5px; grid-column: 2; }
+    .email-footer { grid-column: 2; display: flex; gap: 6px; flex-wrap: wrap; margin-top: 7px; align-items: center; }
+    .badge { font-size: 0.7rem; font-weight: 600; padding: 2px 9px; border-radius: 10px; }
+    .badge-bug { background: var(--bug-bg); color: var(--bug); }
+    .badge-pr { background: var(--pr-bg); color: var(--pr); }
+    .badge-ci { background: var(--ci-bg); color: var(--ci); }
+    .badge-team { background: var(--team-bg); color: var(--team); }
+    .badge-red { background: var(--red-bg); color: var(--red); }
+    .badge-yellow { background: var(--yellow-bg); color: var(--yellow); }
+    .badge-green { background: var(--green-bg); color: var(--green); }
+    .badge-slate { background: var(--slate-bg); color: var(--slate); }
+    .email-time { font-size: 0.72rem; color: var(--gray); white-space: nowrap; }
+
+    /* ── TASKS ── */
+    .task-input-row { display: flex; gap: 8px; margin-bottom: 12px; }
+    .task-input {
+      flex: 1; padding: 8px 12px; border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm); font-size: 0.85rem; font-family: var(--font);
+      outline: none; transition: border-color 0.15s;
+    }
+    .task-input:focus { border-color: #6366f1; }
+    .btn-add-task {
+      background: #6366f1; color: white; border: none;
+      padding: 8px 14px; border-radius: var(--radius-sm);
+      font-size: 0.85rem; cursor: pointer;
+    }
+    .task-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0; border-bottom: 1px solid var(--border);
+    }
+    .task-item:last-child { border-bottom: none; }
+    .task-check {
+      width: 16px; height: 16px; border-radius: 4px;
+      border: 2px solid var(--border); cursor: pointer;
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .task-check.done { background: var(--green); border-color: var(--green); }
+    .task-check.done::after { content: '✓'; color: white; font-size: 0.65rem; font-weight: 700; }
+    .task-text { font-size: 0.85rem; flex: 1; }
+    .task-text.done { text-decoration: line-through; color: var(--gray); }
+    .task-priority { font-size: 0.68rem; font-weight: 700; padding: 1px 7px; border-radius: 8px; }
+    .priority-high { background: var(--red-bg); color: var(--red); }
+    .priority-medium { background: var(--yellow-bg); color: var(--yellow); }
+    .priority-low { background: var(--slate-bg); color: var(--slate); }
+
+    /* ── BUILDS ── */
+    .build-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+    }
+    .build-item:last-child { border-bottom: none; }
+    .build-icon { font-size: 1rem; flex-shrink: 0; }
+    .build-info { flex: 1; }
+    .build-name { font-size: 0.88rem; font-weight: 600; }
+    .build-details { font-size: 0.75rem; color: var(--gray); }
+    .build-time { font-size: 0.72rem; color: var(--gray); }
+
+    /* ── FOCUS TIMER ── */
+    .timer-display {
+      text-align: center; padding: 20px 0 16px;
+    }
+    .timer-time {
+      font-size: 3rem; font-weight: 800; letter-spacing: -2px;
+      font-variant-numeric: tabular-nums; color: var(--dark);
+    }
+    .timer-label { font-size: 0.78rem; color: var(--gray); margin-top: 4px; }
+    .timer-controls { display: flex; gap: 8px; justify-content: center; margin-top: 16px; }
+    .timer-btn {
+      padding: 8px 20px; border-radius: var(--radius-sm);
+      font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      border: 1.5px solid var(--border); background: var(--white);
+      transition: all 0.15s;
+    }
+    .timer-btn.primary { background: var(--dark); color: white; border-color: var(--dark); }
+    .timer-btn.primary:hover { background: var(--dark2); }
+    .timer-btn:hover { border-color: var(--gray); }
+    .timer-sessions { text-align: center; margin-top: 12px; font-size: 0.78rem; color: var(--gray); }
+    .session-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--border); margin: 0 2px; }
+    .session-dot.done { background: #6366f1; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .summary-strip { grid-template-columns: repeat(2, 1fr); }
+      main { padding: 16px; }
+      header { padding: 14px 16px; }
+      .date-tabs { padding: 0 16px; }
+    }
+    @media (max-width: 480px) {
+      .summary-strip { grid-template-columns: repeat(2, 1fr); }
+      .header-left h1 { font-size: 0.95rem; }
+    }
+  </style>
+</head>
+<body>
+<div id="loading-bar"></div>
+
+<header>
+  <div class="header-left">
+    <h1>QE Dashboard — Cristina</h1>
+    <p id="header-date">Loading...</p>
+  </div>
+  <div class="header-right">
+    <div class="last-updated">Last updated: <span id="last-updated-text">—</span></div>
+    <button class="btn-import" onclick="document.getElementById('file-input').click()">📥 Import JSON</button>
+    <input type="file" id="file-input" accept=".json" onchange="importJSON(event)" />
+    <button class="btn-refresh" id="refresh-btn" onclick="refreshData()">
+      <span class="icon">↻</span>
+      <span class="spin">↻</span>
+      Refresh
+    </button>
+  </div>
+</header>
+
+<div class="date-tabs" id="date-tabs"></div>
+
+<main>
+  <div class="summary-strip" id="summary-strip"></div>
+
+  <div class="grid-2">
+    <div class="panel" id="meetings-panel">
+      <div class="panel-header">
+        <span class="panel-title">📅 Meetings Today</span>
+        <span class="panel-count" id="meetings-count">0 meetings</span>
+      </div>
+      <div class="panel-body" id="meetings-body"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">🍅 Focus Timer</span>
+        <span class="panel-count" id="timer-mode-label">Pomodoro</span>
+      </div>
+      <div class="panel-body">
+        <div class="timer-display">
+          <div class="timer-time" id="timer-display">25:00</div>
+          <div class="timer-label" id="timer-label">Focus session</div>
+        </div>
+        <div class="timer-controls">
+          <button class="timer-btn primary" id="timer-start-btn" onclick="toggleTimer()">Start</button>
+          <button class="timer-btn" onclick="resetTimer()">Reset</button>
+          <button class="timer-btn" onclick="switchMode()">Break ☕</button>
+        </div>
+        <div class="timer-sessions" id="timer-sessions">
+          <div id="session-dots"></div>
+          <div style="margin-top:6px" id="session-count">Session 1 of 4</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:16px">
+    <div class="panel-header">
+      <span class="panel-title">📧 Email Triage</span>
+      <span class="panel-count" id="email-count">0 emails</span>
+    </div>
+    <div class="email-filters" id="email-filters">
+      <button class="filter-chip active" data-filter="status" data-val="all" onclick="setFilter('status','all',this)">All</button>
+      <button class="filter-chip" data-filter="status" data-val="ACTION_REQUIRED" onclick="setFilter('status','ACTION_REQUIRED',this)">🔴 Action</button>
+      <button class="filter-chip" data-filter="status" data-val="IN_REVIEW" onclick="setFilter('status','IN_REVIEW',this)">🟡 Review</button>
+      <button class="filter-chip" data-filter="status" data-val="FYI" onclick="setFilter('status','FYI',this)">🟢 FYI</button>
+      <button class="filter-chip" data-filter="status" data-val="DELEGATE" onclick="setFilter('status','DELEGATE',this)">⚪ Delegate</button>
+      <div class="filter-sep"></div>
+      <button class="filter-chip" data-filter="cat" data-val="BUG_REPORTS" onclick="setFilter('cat','BUG_REPORTS',this)">🐛 Bugs</button>
+      <button class="filter-chip" data-filter="cat" data-val="CODE_REVIEWS" onclick="setFilter('cat','CODE_REVIEWS',this)">🔀 PRs</button>
+      <button class="filter-chip" data-filter="cat" data-val="CICD_ALERTS" onclick="setFilter('cat','CICD_ALERTS',this)">⚙️ CI/CD</button>
+      <button class="filter-chip" data-filter="cat" data-val="TEAM_STAKEHOLDERS" onclick="setFilter('cat','TEAM_STAKEHOLDERS',this)">👥 Team</button>
+    </div>
+    <div class="email-list" id="email-list"></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">✅ Tasks Today</span>
+        <span class="panel-count" id="tasks-count">0 tasks</span>
+      </div>
+      <div class="panel-body">
+        <div class="task-input-row">
+          <input class="task-input" id="new-task-input" placeholder="Add a task..." onkeydown="if(event.key==='Enter')addTask()" />
+          <button class="btn-add-task" onclick="addTask()">+ Add</button>
+        </div>
+        <div id="tasks-list"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">⚙️ Build Status</span>
+        <span class="panel-count" id="builds-count">0 builds</span>
+      </div>
+      <div class="panel-body" id="builds-body"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+  // ── STATE ──
+  let allDays = {};
+  let currentDate = null;
+  let activeFilters = { status: 'all', cat: 'all' };
+  let timerInterval = null;
+  let timerRunning = false;
+  let timerSeconds = 25 * 60;
+  let timerMode = 'focus'; // focus | break
+  let sessionsCompleted = 0;
+  let lastUpdated = null;
+  let tasks = {};
+
+  // ── INIT ──
+  window.onload = async () => {
+    loadTasksFromStorage();
+    await loadAllData();
+    startLastUpdatedTimer();
+  };
+
+  // ── LOAD DATA ──
+  async function loadAllData() {
+    showLoading();
+    // Try to load from localStorage first
+    const stored = localStorage.getItem('dashboard_data');
+    if (stored) {
+      try {
+        allDays = JSON.parse(stored);
+      } catch(e) { allDays = {}; }
+    }
+    // Try to fetch local JSON files (works with local server, skips on file://)
+    const dates = getLast7Days();
+    let loaded = false;
+    for (const date of dates) {
+      if (!allDays[date]) {
+        try {
+          const res = await fetch(`data/${date}.json`);
+          if (res.ok) {
+            allDays[date] = await res.json();
+            loaded = true;
+          }
+        } catch(e) { /* file:// protocol - silently skip */ }
+      } else { loaded = true; }
+    }
+    if (loaded) saveToStorage();
+    currentDate = Object.keys(allDays).sort().reverse()[0] || dates[0];
+    lastUpdated = new Date();
+    render();
+    hideLoading();
+  }
+
+  async function refreshData() {
+    const btn = document.getElementById('refresh-btn');
+    btn.classList.add('loading');
+    showLoading();
+    // Re-fetch available JSON files
+    const dates = getLast7Days();
+    let loaded = false;
+    for (const date of dates) {
+      try {
+        const res = await fetch(`data/${date}.json`);
+        if (res.ok) {
+          allDays[date] = await res.json();
+          loaded = true;
+        }
+      } catch(e) {}
+    }
+    if (loaded) saveToStorage();
+    lastUpdated = new Date();
+    render();
+    setTimeout(() => { btn.classList.remove('loading'); hideLoading(); }, 600);
+  }
+
+  // ── IMPORT JSON ──
+  function importJSON(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (data.date) {
+          allDays[data.date] = data;
+          saveToStorage();
+          currentDate = data.date;
+          lastUpdated = new Date();
+          render();
+          hideLoading();
+        }
+      } catch(err) { alert('Invalid JSON file'); }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  }
+
+  // ── STORAGE ──
+  function saveToStorage() {
+    localStorage.setItem('dashboard_data', JSON.stringify(allDays));
+  }
+  function loadTasksFromStorage() {
+    const t = localStorage.getItem('dashboard_tasks');
+    if (t) tasks = JSON.parse(t);
+  }
+  function saveTasksToStorage() {
+    localStorage.setItem('dashboard_tasks', JSON.stringify(tasks));
+  }
+
+  // ── RENDER ──
+  function render() {
+    renderDateTabs();
+    const day = allDays[currentDate];
+    if (!day) { renderEmpty(); return; }
+    renderSummary(day);
+    renderMeetings(day);
+    renderEmails(day);
+    renderTasks(day);
+    renderBuilds(day);
+    updateHeaderDate(day);
+  }
+
+  function renderEmpty() {
+    document.getElementById('summary-strip').innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray);">
+        <p style="font-size:1.1rem;font-weight:600">No data for this day</p>
+        <p style="font-size:0.85rem;margin-top:6px">Import a JSON file or wait for the agent to run.</p>
+      </div>`;
+  }
+
+  function updateHeaderDate(day) {
+    const d = new Date(day.date + 'T12:00:00');
+    document.getElementById('header-date').textContent =
+      d.toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  }
+
+  function renderDateTabs() {
+    const container = document.getElementById('date-tabs');
+    const dates = Object.keys(allDays).sort().reverse();
+    if (dates.length === 0) { container.innerHTML = ''; return; }
+    container.innerHTML = dates.map(date => {
+      const day = allDays[date];
+      const emails = (day.emails || []).length;
+      const label = formatDateLabel(date);
+      return `<div class="date-tab ${date === currentDate ? 'active' : ''}" onclick="switchDay('${date}')">
+        ${label} <span class="badge">${emails}</span>
+      </div>`;
+    }).join('');
+  }
+
+  function switchDay(date) {
+    currentDate = date;
+    render();
+  }
+
+  function renderSummary(day) {
+    const emails = day.emails || [];
+    const counts = { ACTION_REQUIRED: 0, IN_REVIEW: 0, FYI: 0, DELEGATE: 0 };
+    emails.forEach(e => { if (counts[e.status] !== undefined) counts[e.status]++; });
+    document.getElementById('summary-strip').innerHTML = `
+      <div class="summary-card">
+        <div class="summary-dot" style="background:var(--red)"></div>
+        <div><strong>${counts.ACTION_REQUIRED}</strong><br><span>Action required</span></div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-dot" style="background:var(--yellow)"></div>
+        <div><strong>${counts.IN_REVIEW}</strong><br><span>In review</span></div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-dot" style="background:var(--green)"></div>
+        <div><strong>${counts.FYI}</strong><br><span>FYI only</span></div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-dot" style="background:var(--slate)"></div>
+        <div><strong>${counts.DELEGATE}</strong><br><span>Delegate</span></div>
+      </div>`;
+  }
+
+  function renderMeetings(day) {
+    const meetings = day.meetings || [];
+    document.getElementById('meetings-count').textContent = `${meetings.length} meeting${meetings.length!==1?'s':''}`;
+    if (meetings.length === 0) {
+      document.getElementById('meetings-body').innerHTML = '<p class="no-items">No meetings today 🎉</p>';
+      return;
+    }
+    document.getElementById('meetings-body').innerHTML = meetings.map(m => `
+      <div class="meeting-item">
+        <div class="meeting-time">${m.time}</div>
+        <div class="meeting-info">
+          <div class="meeting-title">${m.title}</div>
+          <div class="meeting-dur">${m.duration}</div>
+        </div>
+        <a href="${m.link}" target="_blank" class="meeting-link">Join →</a>
+      </div>`).join('');
+  }
+
+  function renderEmails(day) {
+    const emails = day.emails || [];
+    document.getElementById('email-count').textContent = `${emails.length} email${emails.length!==1?'s':''}`;
+    const list = document.getElementById('email-list');
+    if (emails.length === 0) {
+      list.innerHTML = '<p class="no-items" style="padding:16px 0">No personal emails for this day.</p>';
+      return;
+    }
+    list.innerHTML = emails.map(e => {
+      const statusColor = { ACTION_REQUIRED: 'var(--red)', IN_REVIEW: 'var(--yellow)', FYI: 'var(--green)', DELEGATE: 'var(--slate)' }[e.status] || 'var(--slate)';
+      const catBadge = { BUG_REPORTS: 'badge-bug', CODE_REVIEWS: 'badge-pr', CICD_ALERTS: 'badge-ci', TEAM_STAKEHOLDERS: 'badge-team' }[e.category] || 'badge-slate';
+      const catLabel = { BUG_REPORTS: '🐛 Bug', CODE_REVIEWS: '🔀 PR', CICD_ALERTS: '⚙️ CI/CD', TEAM_STAKEHOLDERS: '👥 Team' }[e.category] || e.category;
+      const statusBadge = { ACTION_REQUIRED: 'badge-red', IN_REVIEW: 'badge-yellow', FYI: 'badge-green', DELEGATE: 'badge-slate' }[e.status] || 'badge-slate';
+      const statusLabel = { ACTION_REQUIRED: '🔴 Action', IN_REVIEW: '🟡 Review', FYI: '🟢 FYI', DELEGATE: '⚪ Delegate' }[e.status] || e.status;
+      return `<div class="email-card" data-status="${e.status}" data-cat="${e.category}" id="email-${e.id}">
+        <div class="email-status-bar" style="background:${statusColor}"></div>
+        <div>
+          <div class="email-subject"><a href="${e.outlook_link}" target="_blank">${e.subject}</a></div>
+          <div class="email-from">From: ${e.from} · ${e.time}</div>
+          <div class="email-summary">${e.summary}</div>
+          <div class="email-footer">
+            <span class="badge ${catBadge}">${catLabel}</span>
+            <span class="badge ${statusBadge}">${statusLabel}</span>
+          </div>
+        </div>
+        <div class="email-time">${e.time}</div>
+      </div>`;
+    }).join('');
+    applyFilters();
+  }
+
+  function renderTasks(day) {
+    const dateKey = currentDate;
+    // Merge data tasks with user-added tasks
+    if (!tasks[dateKey]) {
+      tasks[dateKey] = (day.tasks || []).map(t => ({...t}));
+      saveTasksToStorage();
+    }
+    const dayTasks = tasks[dateKey] || [];
+    const done = dayTasks.filter(t => t.done).length;
+    document.getElementById('tasks-count').textContent = `${done}/${dayTasks.length} done`;
+    document.getElementById('tasks-list').innerHTML = dayTasks.map((t, i) => `
+      <div class="task-item">
+        <div class="task-check ${t.done ? 'done' : ''}" onclick="toggleTask('${dateKey}', ${i})"></div>
+        <span class="task-text ${t.done ? 'done' : ''}">${t.text}</span>
+        <span class="task-priority priority-${t.priority || 'medium'}">${t.priority || 'medium'}</span>
+      </div>`).join('') || '<p class="no-items">No tasks. Add one above!</p>';
+  }
+
+  function renderBuilds(day) {
+    const builds = day.builds || [];
+    document.getElementById('builds-count').textContent = `${builds.length} build${builds.length!==1?'s':''}`;
+    const icon = { passed: '✅', failed: '❌', unstable: '🟡', pending: '🔄' };
+    document.getElementById('builds-body').innerHTML = builds.length === 0
+      ? '<p class="no-items">No build data.</p>'
+      : builds.map(b => `
+        <div class="build-item">
+          <div class="build-icon">${icon[b.status] || '⚪'}</div>
+          <div class="build-info">
+            <div class="build-name">${b.name}</div>
+            <div class="build-details">${b.details}</div>
+          </div>
+          <div class="build-time">${b.time}</div>
+        </div>`).join('');
+  }
+
+  // ── TASKS LOGIC ──
+  function addTask() {
+    const input = document.getElementById('new-task-input');
+    const text = input.value.trim();
+    if (!text) return;
+    if (!tasks[currentDate]) tasks[currentDate] = [];
+    tasks[currentDate].push({ id: 'u' + Date.now(), text, done: false, priority: 'medium' });
+    saveTasksToStorage();
+    input.value = '';
+    renderTasks(allDays[currentDate] || {});
+  }
+
+  function toggleTask(dateKey, index) {
+    tasks[dateKey][index].done = !tasks[dateKey][index].done;
+    saveTasksToStorage();
+    renderTasks(allDays[currentDate] || {});
+  }
+
+  // ── FILTERS ──
+  function setFilter(type, val, el) {
+    activeFilters[type] = val;
+    document.querySelectorAll(`[data-filter="${type}"]`).forEach(b => b.classList.remove('active'));
+    if (el) el.classList.add('active');
+    applyFilters();
+  }
+
+  function applyFilters() {
+    document.querySelectorAll('.email-card').forEach(card => {
+      const statusOk = activeFilters.status === 'all' || card.dataset.status === activeFilters.status;
+      const catOk = activeFilters.cat === 'all' || card.dataset.cat === activeFilters.cat;
+      card.classList.toggle('hidden', !(statusOk && catOk));
+    });
+  }
+
+  // ── TIMER ──
+  function toggleTimer() {
+    if (timerRunning) {
+      clearInterval(timerInterval);
+      timerRunning = false;
+      document.getElementById('timer-start-btn').textContent = 'Resume';
+    } else {
+      timerRunning = true;
+      document.getElementById('timer-start-btn').textContent = 'Pause';
+      timerInterval = setInterval(() => {
+        timerSeconds--;
+        if (timerSeconds <= 0) {
+          clearInterval(timerInterval);
+          timerRunning = false;
+          if (timerMode === 'focus') {
+            sessionsCompleted++;
+            timerMode = 'break';
+            timerSeconds = 5 * 60;
+            document.getElementById('timer-label').textContent = '☕ Break time!';
+            document.getElementById('timer-mode-label').textContent = 'Break';
+          } else {
+            timerMode = 'focus';
+            timerSeconds = 25 * 60;
+            document.getElementById('timer-label').textContent = 'Focus session';
+            document.getElementById('timer-mode-label').textContent = 'Pomodoro';
+          }
+          document.getElementById('timer-start-btn').textContent = 'Start';
+          updateSessionDots();
+        }
+        updateTimerDisplay();
+      }, 1000);
+    }
+  }
+
+  function resetTimer() {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    timerMode = 'focus';
+    timerSeconds = 25 * 60;
+    document.getElementById('timer-start-btn').textContent = 'Start';
+    document.getElementById('timer-label').textContent = 'Focus session';
+    document.getElementById('timer-mode-label').textContent = 'Pomodoro';
+    updateTimerDisplay();
+  }
+
+  function switchMode() {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    if (timerMode === 'focus') {
+      timerMode = 'break';
+      timerSeconds = 5 * 60;
+      document.getElementById('timer-label').textContent = '☕ Break time';
+      document.getElementById('timer-mode-label').textContent = 'Break';
+    } else {
+      timerMode = 'focus';
+      timerSeconds = 25 * 60;
+      document.getElementById('timer-label').textContent = 'Focus session';
+      document.getElementById('timer-mode-label').textContent = 'Pomodoro';
+    }
+    document.getElementById('timer-start-btn').textContent = 'Start';
+    updateTimerDisplay();
+  }
+
+  function updateTimerDisplay() {
+    const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+    const s = (timerSeconds % 60).toString().padStart(2, '0');
+    document.getElementById('timer-display').textContent = `${m}:${s}`;
+  }
+
+  function updateSessionDots() {
+    const total = 4;
+    document.getElementById('session-dots').innerHTML =
+      Array.from({length: total}, (_, i) =>
+        `<span class="session-dot ${i < sessionsCompleted ? 'done' : ''}"></span>`
+      ).join('');
+    document.getElementById('session-count').textContent =
+      `Session ${Math.min(sessionsCompleted + 1, 4)} of 4`;
+  }
+  updateSessionDots();
+
+  // ── LAST UPDATED ──
+  function startLastUpdatedTimer() {
+    setInterval(() => {
+      if (!lastUpdated) return;
+      const diff = Math.floor((Date.now() - lastUpdated) / 1000);
+      let text;
+      if (diff < 60) text = 'just now';
+      else if (diff < 3600) text = `${Math.floor(diff/60)} min ago`;
+      else text = `${Math.floor(diff/3600)}h ago`;
+      document.getElementById('last-updated-text').textContent = text;
+    }, 10000);
+    if (lastUpdated) document.getElementById('last-updated-text').textContent = 'just now';
+  }
+
+  // ── LOADING ──
+  function showLoading() {
+    const bar = document.getElementById('loading-bar');
+    bar.classList.remove('done');
+    bar.classList.add('active');
+    bar.style.width = '';
+  }
+  function hideLoading() {
+    const bar = document.getElementById('loading-bar');
+    bar.classList.remove('active');
+    bar.classList.add('done');
+    setTimeout(() => { bar.classList.remove('done'); bar.style.width = '0'; }, 600);
+  }
+
+  // ── HELPERS ──
+  function getLast7Days() {
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      days.push(d.toISOString().split('T')[0]);
+    }
+    return days;
+  }
+
+  function formatDateLabel(dateStr) {
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    if (dateStr === today) return 'Today';
+    if (dateStr === yesterday) return 'Yesterday';
+    const d = new Date(dateStr + 'T12:00:00');
+    return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+</script>
+</body>
+</html>
