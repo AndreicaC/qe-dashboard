@@ -1,0 +1,23 @@
+{
+  "date": "2026-04-01",
+  "generated_at": "2026-04-01T07:01:00Z",
+  "meetings": [
+    { "title": "Daily Standup", "time": "10:00", "duration": "30min", "link": "https://teams.microsoft.com/", "platform": "Teams" },
+    { "title": "Sprint Planning S43", "time": "11:00", "duration": "2h", "link": "https://teams.microsoft.com/", "platform": "Teams" }
+  ],
+  "emails": [
+    { "id": "BBMk001", "subject": "[JIRA] BUG-4410 - Checkout broken on Android", "from": "jira-noreply@fanduel.com", "time": "07:30", "category": "BUG_REPORTS", "status": "ACTION_REQUIRED", "summary": "P1 bug on Android checkout flow. Assigned to you for verification.", "outlook_link": "https://outlook.office.com/mail/inbox" },
+    { "id": "BBMk002", "subject": "[GitHub] PR #887 — feat/dark-mode review request", "from": "notifications@github.com", "time": "06:45", "category": "CODE_REVIEWS", "status": "IN_REVIEW", "summary": "Design review for dark mode feature. Waiting for your test plan.", "outlook_link": "https://outlook.office.com/mail/inbox" },
+    { "id": "BBMk003", "subject": "[Jenkins] Nightly build SUCCESS ✅", "from": "ci@fanduel.com", "time": "03:00", "category": "CICD_ALERTS", "status": "FYI", "summary": "All 847 tests passed. Clean build.", "outlook_link": "https://outlook.office.com/mail/inbox" },
+    { "id": "BBMk004", "subject": "Sprint 43 kick-off notes", "from": "scrum@fanduel.com", "time": "08:00", "category": "TEAM_STAKEHOLDERS", "status": "FYI", "summary": "Sprint 43 goals and stories shared. Read before planning session.", "outlook_link": "https://outlook.office.com/mail/inbox" }
+  ],
+  "builds": [
+    { "name": "Nightly Build", "status": "passed", "time": "03:00", "details": "847/847 passed" },
+    { "name": "Deploy prod", "status": "passed", "time": "06:00", "details": "v2.4.1 deployed" }
+  ],
+  "tasks": [
+    { "id": "t1", "text": "Verify BUG-4410 Android checkout", "done": true, "priority": "high" },
+    { "id": "t2", "text": "Attend Sprint Planning 11:00", "done": true, "priority": "high" },
+    { "id": "t3", "text": "Write test plan for dark mode PR", "done": false, "priority": "medium" }
+  ]
+}
