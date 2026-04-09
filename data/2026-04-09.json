@@ -1,0 +1,9 @@
+{
+  "date": "2026-04-09",
+  "generated_at": "2026-04-09T00:00:00Z",
+  "note": "outlook_email_search and outlook_calendar_search tools are not configured in this environment. Email and calendar data could not be retrieved. Please connect an Outlook MCP integration to enable live triage.",
+  "meetings": [],
+  "emails": [],
+  "builds": [],
+  "tasks": []
+}
