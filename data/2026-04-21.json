@@ -1,0 +1,11 @@
+{
+  "date": "2026-04-21",
+  "generated_at": "2026-04-21T00:00:00Z",
+  "meetings": [],
+  "emails": [],
+  "builds": [],
+  "tasks": [],
+  "_meta": {
+    "warning": "Outlook MCP integration not available. Email and calendar data could not be fetched. Connect an Outlook MCP server (e.g. via microsoft-graph MCP) to enable live triage."
+  }
+}
